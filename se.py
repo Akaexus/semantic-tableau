@@ -6,10 +6,13 @@ from semantic import *
 # xd = Logic.buildFormula(rpn)
 
 #alpha only formula
-formula = And([Not(Predicate('p', [Constant('a')])), And([Predicate('p', [Constant('a')]), Predicate('p', [Constant('a')])])])
+# formula = And([Not(Predicate('p', [Constant('a')])), And([Predicate('p', [Constant('a')]), Predicate('p', [Constant('a')])])])
 
 
 # beta only formula true
 # formula = Or([Predicate('p', [Constant('a')]), Predicate('p', [Constant('b')])])
+
+# delta only
+formula = ExistentialQuantifier([Variable('Z'), Predicate('p', [Variable('Z')])])
 s = Semantic(formula)
 print(s.resolve())
