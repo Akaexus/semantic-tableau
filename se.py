@@ -5,8 +5,11 @@ from semantic import *
 
 # xd = Logic.buildFormula(rpn)
 
-formula = And([Predicate('p', [Constant('a')]), And([Predicate('p', [Constant('a')]), Predicate('p', [Constant('a')])])])
-print(formula)
+#alpha only formula
+formula = And([Not(Predicate('p', [Constant('a')])), And([Predicate('p', [Constant('a')]), Predicate('p', [Constant('a')])])])
 
+
+# beta only formula true
+# formula = Or([Predicate('p', [Constant('a')]), Predicate('p', [Constant('b')])])
 s = Semantic(formula)
 print(s.resolve())

@@ -1,5 +1,5 @@
 from logic import *
-
+import copy
 
 class Semantic:
     semanticTables = {
@@ -27,10 +27,10 @@ class Semantic:
         'beta': [
             {  # not (A and B)
                 'test': lambda e: isinstance(e, Not) and isinstance(e.args[0], And),
-                'convert': lambda e: [Not(e.args[0]), Not(e.args[1])]
+                'convert': lambda e: [Not(e.args[0].args[0]), Not(e.args[0].args[1])]
             }, {  # A or B
                 'test': lambda e: isinstance(e, Or),
-                'convert': lambda e: [e.args[0], e.args[1]]
+                'convert': lambda e: e.args
             }, {  # not (A xnor B)
                 'test': lambda e: isinstance(e, Not) and isinstance(e.args[0], Xnor),
                 'convert': lambda e: [Not(Implication([e.args[0], e.args[1]])), Not(Implication([e.args[1], e.args[0]]))]
@@ -92,10 +92,22 @@ class Semantic:
 
         while not self.canEndResolving(formulas):
             for index, subformula in enumerate(formulas):
+                # alfa
                 for case in self.semanticTables['alfa']:
                     if (case['test'])(subformula):
                         newSubformulas = (case['convert'])(formulas.pop(index))
                         formulas.extend(newSubformulas)
                         break
-        print(formulas)
+                # beta
+                for case in self.semanticTables['beta']:
+                    if (case['test'])(subformula):
+                        newSubformulas = (case['convert'])(formulas.pop(index))
+                        aFormula = copy.deepcopy(formulas)
+                        aFormula.insert(index, newSubformulas[0])
+                        a = Semantic(aFormula[0], copy.deepcopy(constants))
+
+                        bFormula = copy.deepcopy(formulas)
+                        bFormula.insert(index, newSubformulas[1])
+                        b = Semantic(bFormula[0], copy.deepcopy(constants))
+                        return a.resolve() or b.resolve()
         return self.resolveFlatStructure(formulas)
