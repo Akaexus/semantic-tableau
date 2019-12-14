@@ -75,6 +75,11 @@ class Semantic:
                 return []
 
         constants = set(grab(self.formula))
+
+        for c in map(Constant, map(chr, range(ord('a'), ord('z')))): # generate more constants
+            if c not in self.constants:
+                self.availableConstants.append(c)
+                
         if len(constants) == 0:
             return {self.generateNextConstant()}
         else:
@@ -97,14 +102,12 @@ class Semantic:
 
     @staticmethod
     def changeVariableInFormula(f, variable, constant):
-        print('changeVariableInFormula({}, {}, {})'.format(f, variable, constant))
         if isinstance(f, Quantifier):
             return Semantic.changeVariableInFormula(f.quantifiedExpression, variable, constant)
         elif isinstance(f, Operator) or isinstance(f, Function) or isinstance(f, Predicate):
             f.args = list(map(lambda arg: Semantic.changeVariableInFormula(arg, variable, constant), f.args))
             return f
         elif isinstance(f, Variable) and f == variable:
-            print('tak')
             return constant
 
 
@@ -112,10 +115,6 @@ class Semantic:
     def resolve(self):
         constants = self.constants if len(self.constants) else self.getConstants()
         formulas = [self.formula]
-
-        for c in map(Constant, map(chr, range(ord('a'), ord('z')))): # generate more constants
-            if c not in self.constants:
-                self.availableConstants.append(c)
 
         while not self.canEndResolving(formulas):
             for index, subformula in enumerate(formulas):
@@ -146,5 +145,5 @@ class Semantic:
                         newConst = self.generateNextConstant()
                         constants.add(newConst)
                         formulas[index] = Semantic.changeVariableInFormula(subformula, variable, newConst)
-            print(formulas)
+                print(formulas, constants)
         return self.resolveFlatStructure(formulas)
