@@ -1,3 +1,5 @@
+from logic.operator import Operator
+from logic.quantifier import Quantifier
 from logic.constant import Constant
 from logic.function import Function
 from logic.operator._not import Not
@@ -28,9 +30,9 @@ class Logic:
                     else:
                         if entity in [Predicate, Function]:
                             numberOfArguments = entity.calculateNumberOfArugments(element)
-                            arguments = stack.pop(numberOfArguments)
-                            stack.push(entity(element, arguments))
+                            args = stack.pop(numberOfArguments)
+                            stack.push(entity(element, args))
                         else:
-                            arguments = stack.pop(entity.numberOfArguments)
-                            stack.push(entity(arguments))
-        return stack
+                            args = stack.pop(entity.numberOfArguments)
+                            stack.push(entity(args))
+        return stack.stack[0]

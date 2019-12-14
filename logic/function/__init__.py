@@ -1,16 +1,16 @@
 import re
 class Function():
-    arguments = []
+    args = []
     numberOfArguments = 0
     name = "f"
 
-    def __init__(self, expression, arguments):
+    def __init__(self, expression, args):
         self.name = expression[0]
-        self.arguments = arguments
-        self.numberOfArguments = len(arguments)
+        self.args = args
+        self.numberOfArguments = len(args)
 
     def __repr__(self):
-        return ("{}(" + ', '.join(["{}"]*self.numberOfArguments) + ")").format(self.name, *self.arguments)
+        return ("{}(" + ', '.join(["{}"]*self.numberOfArguments) + ")").format(self.name, *self.args)
 
     def __str__(self):
         return self.__repr__()
@@ -29,3 +29,14 @@ class Function():
     @staticmethod
     def calculateNumberOfArugments(expression):
         return int(expression[2::])
+
+    def __eq__(self, other):
+        if not isinstance(other, Function):
+            return False
+        if self.name != other.name:
+            return False
+        if self.numberOfArguments != other.numberOfArguments:
+            return False
+        if self.args != other.args:
+            return False
+        return True

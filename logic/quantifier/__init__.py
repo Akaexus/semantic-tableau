@@ -6,9 +6,9 @@ class Quantifier:
     numberOfArguments = 2
     symbols = []
 
-    def __init__(self, arguments):
-        self.domain = arguments[0]
-        self.quantifiedExpression = arguments[1]
+    def __init__(self, args):
+        self.domain = args[0]
+        self.quantifiedExpression = args[1]
 
     def __str__(self):
         return '{} {} {}'.format(self.symbols[0], self.domain, self.bracketize(self.quantifiedExpression))
