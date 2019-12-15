@@ -47,15 +47,26 @@ class Semantic:
                 'test': lambda e: isinstance(e, Not) and isinstance(e.args[0], UniversalQuantifier),
                 'convert': lambda e: [e.args[0].domain, e.args[0].quantifiedExpression]
             }
+        ],
+        'gamma': [
+            {
+                'test': lambda e: isinstance(e, UniversalQuantifier),
+                'convert': lambda e: [e.domain, e.quantifiedExpression]
+            }, {
+                'test': lambda e: isinstance(e, Not) and isinstance(e.args[0], ExistentialQuantifier),
+                'convert': lambda e: [e.args[0].domain, e.args[0].quantifiedExpression]
+            }
         ]
     }
     formula = None
     constants = []
     availableConstants = []
+    gammaUsedConstants = []
 
-    def __init__(self, formula, constants = []):
+    def __init__(self, formula, constants = [], gammaUsedConstants = []):
         self.formula = formula
         self.constants = constants
+        self.gammaUsedConstants = gammaUsedConstants
 
     def generateNextConstant(self):
         return self.availableConstants.pop(0)
@@ -79,7 +90,7 @@ class Semantic:
         for c in map(Constant, map(chr, range(ord('a'), ord('z')))): # generate more constants
             if c not in self.constants:
                 self.availableConstants.append(c)
-                
+
         if len(constants) == 0:
             return {self.generateNextConstant()}
         else:
@@ -113,16 +124,21 @@ class Semantic:
 
 
     def resolve(self):
-        constants = self.constants if len(self.constants) else self.getConstants()
+        if len(self.constants) == 0:
+            self.constants = self.getConstants()
         formulas = [self.formula]
-
-        while not self.canEndResolving(formulas):
+        changedAnySubformula = True
+        while not self.canEndResolving(formulas) and changedAnySubformula:
+            changedAnySubformula = False
             for index, subformula in enumerate(formulas):
+                usedAnyTable = False
                 # alfa
                 for case in self.semanticTables['alfa']:
                     if (case['test'])(subformula):
                         newSubformulas = (case['convert'])(formulas.pop(index))
                         formulas.extend(newSubformulas)
+                        usedAnyTable = True
+                        changedAnySubformula = True
                         break
 
                 # beta
@@ -131,19 +147,36 @@ class Semantic:
                         newSubformulas = (case['convert'])(formulas.pop(index))
                         aFormula = copy.deepcopy(formulas)
                         aFormula.insert(index, newSubformulas[0])
-                        a = Semantic(aFormula[0], copy.deepcopy(constants))
+                        a = Semantic(aFormula[0], copy.deepcopy(self.constants), copy.deepcopy(self.gammaUsedConstants))
 
                         bFormula = copy.deepcopy(formulas)
                         bFormula.insert(index, newSubformulas[1])
-                        b = Semantic(bFormula[0], copy.deepcopy(constants))
+                        b = Semantic(bFormula[0], copy.deepcopy(self.constants), copy.deepcopy(self.gammaUsedConstants))
                         return a.resolve() or b.resolve()
-                # delta
 
+                # delta
                 for case in self.semanticTables['delta']:
                     if (case['test'])(subformula):
                         variable, quantifiedExpression = (case['convert'])(subformula)
                         newConst = self.generateNextConstant()
-                        constants.add(newConst)
+                        self.constants.add(newConst)
                         formulas[index] = Semantic.changeVariableInFormula(subformula, variable, newConst)
-                print(formulas, constants)
+                        usedAnyTable = True
+                        changedAnySubformula = True
+                        break
+
+                # gamma
+                if not usedAnyTable and len(self.gammaUsedConstants) != len(self.constants):
+                    for case in self.semanticTables['gamma']:
+                        if (case['test'])(subformula):
+                            variable, quantifiedExpression = (case['convert'])(subformula)
+                            uc = None
+                            for c in self.constants:
+                                if c not in self.gammaUsedConstants:
+                                    uc = c
+                                    break
+                            if uc:
+                                formulas.append(Semantic.changeVariableInFormula(quantifiedExpression, variable, uc))
+                                self.gammaUsedConstants.append(uc)
+                                changedAnySubformula = True
         return self.resolveFlatStructure(formulas)

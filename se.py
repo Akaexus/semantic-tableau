@@ -13,6 +13,14 @@ from semantic import *
 # formula = Or([Predicate('p', [Constant('a')]), Predicate('p', [Constant('b')])])
 
 # delta only
-formula = ExistentialQuantifier([Variable('Z'), Predicate('p', [Variable('Z')])])
+# formula = ExistentialQuantifier([Variable('Z'), Predicate('p', [Variable('Z')])])
+
+#gamma
+# formula = UniversalQuantifier([Variable('Z'), Predicate('p', [Variable('Z')])])
+# formula = ExistentialQuantifier([Variable('y'), UniversalQuantifier([Variable('x'), Implication([Predicate('p', [Variable('y')]), Predicate('p', [Variable('x')])])])])
+
+rpn = input().split()
+formula = Logic.buildFormula(rpn)
+print(formula)
 s = Semantic(formula)
-print(s.resolve())
+print('SPEŁNIALNA' if s.resolve() else 'NIESPEŁNIALNA')
