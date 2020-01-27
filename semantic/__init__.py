@@ -42,10 +42,10 @@ class Semantic:
         'delta': [
             {
                 'test': lambda e: isinstance(e, ExistentialQuantifier),
-                'convert': lambda e: [e.domain, e.quantifiedExpression]
+                'convert': lambda e: [e.domain, copy.deepcopy(e.quantifiedExpression)]
             }, {
                 'test': lambda e: isinstance(e, Not) and isinstance(e.args[0], UniversalQuantifier),
-                'convert': lambda e: [e.args[0].domain, e.args[0].quantifiedExpression]
+                'convert': lambda e: [e.args[0].domain, list(map(copy.deepcopy,e.args[0].quantifiedExpression))]
             }
         ],
         'gamma': [
@@ -112,14 +112,20 @@ class Semantic:
         return True
 
     @staticmethod
-    def changeVariableInFormula(f, variable, constant):
+    def changeVariableInFormula(x, v, c):
+        f = copy.deepcopy(x)
+        variable = copy.deepcopy(v)
+        constant = copy.deepcopy(c)
+
         if isinstance(f, Quantifier):
             return Semantic.changeVariableInFormula(f.quantifiedExpression, variable, constant)
         elif isinstance(f, Operator) or isinstance(f, Function) or isinstance(f, Predicate):
-            f.args = list(map(lambda arg: Semantic.changeVariableInFormula(arg, variable, constant), f.args))
+            f.args = list(map(lambda argument: Semantic.changeVariableInFormula(argument, variable, constant), f.args))
             return f
         elif isinstance(f, Variable) and f == variable:
-            return constant
+            return copy.deepcopy(constant)
+        else:
+            return f
 
 
 
@@ -173,10 +179,11 @@ class Semantic:
                             uc = None
                             for c in self.constants:
                                 if c not in self.gammaUsedConstants:
-                                    uc = c
+                                    uc = copy.deepcopy(c)
                                     break
                             if uc:
                                 formulas.append(Semantic.changeVariableInFormula(quantifiedExpression, variable, uc))
                                 self.gammaUsedConstants.append(uc)
                                 changedAnySubformula = True
+            print(formulas)
         return self.resolveFlatStructure(formulas)
